@@ -20,7 +20,7 @@ from tqdm.auto import tqdm
 from operator import attrgetter
 from pathlib import Path
 from roscpp.srv import SetLoggerLevel
-from utilities.srv import DataSampleCommand, DataSampleCommandRequest, DataSampleCommandResponse
+from scikit_medical_robot.srv import DataSampleCommand, DataSampleCommandRequest, DataSampleCommandResponse
 from ..utilities import generate_timedate_cache_file, mergesort, ensure_dir
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QProcess, pyqtSignal, QCoreApplication
