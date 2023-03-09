@@ -1,0 +1,13 @@
+ctl_msgs/AudioData:
+    module: ctl_msgs.msg
+    class: AudioData
+    extract:
+        paras: ["channels", "connects", "data"]
+        extras: 
+            connects: "uint32"
+            data: "float32"
+ctl_msgs/AudioDisplayData:
+    module: ctl_msgs.msg
+    class: AudioDisplayData
+    extract:
+        paras: ["value"]

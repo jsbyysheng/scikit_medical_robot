@@ -1,0 +1,5 @@
+int32 operation
+string filename
+---
+bool success
+string message
