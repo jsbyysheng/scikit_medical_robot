@@ -19,6 +19,50 @@ PICKED_MARKER_SCALE = (0.005, 0.005, 0.005)
 TOOLTIP_MARKER_COLOR = (1.0, 0.0, 0.0, 1.0)
 TOOLTIP_MARKER_SCALE = (0.005, 0.005, 0.005)
 
+class position_recorder:
+    
+    def __init__(self, th: tf2_helper, position_recorder, name='position_recorder', caches_dir='exp', child_dir='position_recorder') -> None:
+        self.th = th
+        self.position_recorder = position_recorder
+        self.name = name
+        self.caches_dir = caches_dir
+        self.child_dir = child_dir
+
+        self.sampler = jupyter_quick_sample(
+            name, 
+            self.sample, 
+            self.evaluate, 
+            self.clear_samples, 
+            self.save_samples
+        )
+
+    def sample(self, N):
+        trans = self.th.sample(target_link=self.position_recorder)
+        trans = self.th.matrix_from_transform(trans.transform)
+        if trans is not None:
+            position, quat = self.th.matrix_to_position_quat(trans)
+            self.th.add_sphere_marker(position, marker_id=N+PICKED_MARKER_ID, rgba=PICKED_MARKER_COLOR, scale=PICKED_MARKER_SCALE)
+            print(f"position: \n{position}")
+            return position
+        return None
+
+    def evaluate(self, _):
+        return f'no evaluation'
+
+    def clear_samples(self, datas):
+        # th.delete_all_markers()
+        for idx, _ in enumerate(datas):
+            self.th.add_sphere_marker([0, 0, 0], marker_id=idx+PICKED_MARKER_ID, action=False)
+
+    def save_samples(self, datas, _):
+        f_name = generate_timedate_cache_file(caches_dir=self.caches_dir, child_dir=self.child_dir, filetype='pickle', suffix=self.name)
+        with open(f_name, "wb") as f:
+            pickle.dump(np.array(datas), f)
+        print(f"saved to {f_name}")
+
+    def run(self):
+        return self.sampler.run_sample()
+
 class pose_recorder:
     
     def __init__(self, th: tf2_helper, pose_link_name, name='pose_recorder', caches_dir='exp', child_dir='pose_recorder') -> None:
