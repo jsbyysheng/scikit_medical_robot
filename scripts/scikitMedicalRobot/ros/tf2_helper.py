@@ -463,7 +463,7 @@ class tf2_helper:
     def quat_to_angleaxis(q):
         # https://en.wikipedia.org/wiki/Axis%E2%80%93angle_representation#Unit_quaternions
         # q = [x y z w]
-        angle = 2 * np.atan2(np.linalg.norm([q[0], q[1], q[2]]), q[3])
+        angle = 2 * np.arctan2(np.linalg.norm([q[0], q[1], q[2]]), q[3])
         if abs(angle) > 1e-6:
             axis_normed = [q[0] / np.sin(angle / 2), q[1] / np.sin(angle / 2), q[2] / np.sin(angle / 2)]
         else:

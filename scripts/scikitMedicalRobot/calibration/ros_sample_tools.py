@@ -136,7 +136,7 @@ class tool_tip_calibration_recoder:
 
     def evaluate(self, datas):
         if len(datas) >= 4:
-            center, r, pcov = tcp_calibration.pivot(np.array(datas))
+            center, r, pcov = tcp_calibration.fit_data_sphere(np.array(datas))
             self.th.add_sphere_marker(center, marker_id=OUTER_MARKER_ID, rgba=OUTER_MARKER_COLOR, scale=(2 * r, 2 * r, 2 * r))
             self.th.add_sphere_marker(center, marker_id=CENTER_MARKER_ID, rgba=CENTER_MARKER_COLOR, scale=CENTER_MARKER_SCALE)
             ret = tcp_calibration.tip2tip(datas)
@@ -148,7 +148,7 @@ class tool_tip_calibration_recoder:
                 parent_frame=self.ee_link_name
             )
 
-            err, reprojection = tcp_calibration.evaluate(datas, ret)
+            err, reprojection = tcp_calibration.evaluate2(ret, datas)
             print(f"reprojection err: {err * 1000} mm")
             center_x = np.mean(np.array(reprojection)[:, 0])
             center_y = np.mean(np.array(reprojection)[:, 1])

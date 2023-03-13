@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, least_squares
 from .sample_helper import jupyter_quick_sample
 from ..utilities import generate_timedate_cache_file
 
@@ -290,9 +290,20 @@ class tcp_calibration:
             return np.linalg.pinv(L).dot(R)
         else:
             return np.linalg.inv(L).dot(R)
+        
+    @staticmethod
+    def tip2tip_optim(transforms, tcp_cali_x0=None):
+        if tcp_cali_x0 is None:
+            tcp_cali_x0 = tcp_calibration.tip2tip(transforms)
+        center, _, _ = tcp_calibration.fit_data_sphere(transforms)
+        def fun(calibration_result, transforms, center):
+            err, _ = tcp_calibration.evaluate1(calibration_result, transforms, center)
+            return err
+        solution = least_squares(fun, x0=tcp_cali_x0.flatten(), args=(transforms, center), method='lm')
+        return solution.x.reshape(3, 1), solution
 
     @staticmethod
-    def pivot(transforms):
+    def fit_data_sphere(transforms):
         xdata = transforms[:, 0:3, 3] 
         ydata = np.zeros(len(xdata))
     
@@ -302,10 +313,34 @@ class tcp_calibration:
         popt, pcov = curve_fit(func, xdata, ydata)
         center = popt[0:3]
         r = popt[3]
+        
         return center, r, pcov
 
     @staticmethod
-    def evaluate(transforms, calibration_result):
+    def evaluate1(calibration_result, transforms, center=None):
+        # input / output unit: meter
+        # calibration_result: 3 x 1 matrix
+        if center is None:
+            center, _, _ = tcp_calibration.fit_data_sphere(transforms)
+
+        cali_trans = np.ones((4, 1))
+        cali_trans[0:3, :] = calibration_result.reshape(3, 1)
+        reprojection = []
+        for t in transforms:
+            reprojection.append(t.dot(cali_trans))
+        err = np.array([0.0, 0.0, 0.0])
+        for idx in range(len(reprojection)):
+            x0 = reprojection[idx][0, 0]
+            y0 = reprojection[idx][1, 0]
+            z0 = reprojection[idx][2, 0]
+            err[0] = err[0] + np.abs(x0 - center[0])
+            err[1] = err[1] + np.abs(y0 - center[1])
+            err[2] = err[2] + np.abs(z0 - center[2])
+        err = err / len(reprojection)
+        return err, reprojection
+
+    @staticmethod
+    def evaluate2(calibration_result, transforms):
         # input / output unit: meter
         # calibration_result: 3 x 1 matrix
         cali_trans = np.ones((4, 1))
